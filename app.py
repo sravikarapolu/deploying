@@ -10,7 +10,8 @@ from collections import Counter
 app = Flask(__name__)
 CORS(app)
 
-model = pickle.load(open("model.pkl", "rb"))
+def load_model():
+    return pickle.load(open("model.pkl", "rb"))
 
 # ---------------- LIVE MONITOR ----------------
 def fake_input():
@@ -18,6 +19,7 @@ def fake_input():
 
 @app.route('/live')
 def live():
+    model = load_model()
     data = fake_input()
     pred = model.predict([data])[0]
 
@@ -42,7 +44,7 @@ def upload():
     # Encode categorical columns
     for col in X.select_dtypes(include=['object']).columns:
         X[col] = LabelEncoder().fit_transform(X[col])
-
+    model = load_model()
     preds = model.predict(X)
 
     # Simulate attack types (for visual dashboard)
