@@ -1,0 +1,65 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>SentinelNet Live Monitor</title>
+</head>
+
+<body style="background:#0b1220;color:white;font-family:Arial">
+
+<h1 style="text-align:center;">SentinelNet - Live Traffic Monitor</h1>
+
+<div id="alertBox" style="text-align:center;font-size:20px;color:red;margin-bottom:10px;"></div>
+
+<table border="1" width="100%" style="text-align:center">
+<thead>
+<tr>
+<th>Time</th>
+<th>Activity</th>
+<th>Status</th>
+<th>Confidence</th>
+<th>Action</th>
+</tr>
+</thead>
+
+<tbody id="tableBody"></tbody>
+</table>
+
+<script>
+setInterval(() => {
+    fetch("https://deploying-2-ub1h.onrender.com/live")
+    .then(res => res.json())
+    .then(data => {
+
+        if (data.status !== 'normal') {
+            document.getElementById("alertBox").innerHTML =
+                "🚨 ALERT: Intrusion Detected!";
+        } else {
+            document.getElementById("alertBox").innerHTML = "";
+        }
+
+        const row = `
+        <tr>
+            <td>${data.time}</td>
+            <td>${data.activity}</td>
+            <td style="color:${data.status !== 'normal' ? 'red' : 'lime'};font-weight:bold;">
+                ${data.status !== 'normal' ? '🚨 Intrusion' : '✅ Normal'}
+            </td>
+            <td>${data.confidence}</td>
+            <td style="color:${data.action === 'Quarantine' ? 'red' : 'white'}">
+                ${data.action}
+            </td>
+        </tr>`;
+
+        let table = document.getElementById("tableBody");
+        table.innerHTML = row + table.innerHTML;
+
+        if (table.rows.length > 15) {
+            table.deleteRow(15);
+        }
+    });
+
+}, 2000);
+</script>
+
+</body>
+</html>

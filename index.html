@@ -1,64 +1,142 @@
 <!DOCTYPE html>
 <html>
 <head>
-    <title>SentinelNet Live Monitor</title>
+    <title>SentinelNet Dashboard</title>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+    <style>
+        body {
+            background: #0b1220;
+            color: white;
+            font-family: Arial;
+            margin: 0;
+        }
+
+        h1 {
+            text-align: center;
+            padding: 20px;
+            color: #00c3ff;
+        }
+
+        .container {
+            text-align: center;
+            margin: 20px;
+        }
+
+        input, button {
+            padding: 10px;
+            margin: 10px;
+            border-radius: 5px;
+            border: none;
+        }
+
+        button {
+            background: #00c3ff;
+            color: black;
+            font-weight: bold;
+            cursor: pointer;
+        }
+
+        .charts {
+            display: flex;
+            justify-content: space-around;
+            flex-wrap: wrap;
+            margin-top: 30px;
+        }
+
+        .card {
+            background: #121a2f;
+            padding: 20px;
+            border-radius: 10px;
+            width: 40%;
+            box-shadow: 0 0 10px rgba(0,0,0,0.5);
+        }
+
+        canvas {
+            max-width: 300px;
+            max-height: 300px;
+        }
+
+        .btn-live {
+            margin-top: 30px;
+            background: #28a745;
+        }
+    </style>
 </head>
 
-<body style="background:#0b1220;color:white;font-family:Arial">
+<body>
 
-<h1 style="text-align:center;">SentinelNet - Live Traffic Monitor</h1>
+<h1>SentinelNet - AI Attack Dashboard</h1>
 
-<div id="alertBox" style="text-align:center;font-size:20px;color:red;margin-bottom:10px;"></div>
+<div class="container">
+    <input type="file" id="fileInput">
+    <button onclick="uploadFile()">Upload & Analyze</button>
+</div>
 
-<table border="1" width="100%" style="text-align:center">
-<thead>
-<tr>
-<th>Time</th>
-<th>Activity</th>
-<th>Status</th>
-<th>Confidence</th>
-<th>Action</th>
-</tr>
-</thead>
+<div class="charts">
+    <div class="card">
+        <h3>Attack Share</h3>
+        <canvas id="pieChart"></canvas>
+    </div>
 
-<tbody id="tableBody"></tbody>
-</table>
+    <div class="card">
+        <h3>Attack Count</h3>
+        <canvas id="barChart"></canvas>
+    </div>
+</div>
+
+<div class="container">
+    <button class="btn-live" onclick="goLive()">Go to Live Monitor</button>
+</div>
 
 <script>
-setInterval(() => {
-    fetch("https://setinelnet.onrender.com/live")
+function uploadFile() {
+    let file = document.getElementById("fileInput").files[0];
+
+    let formData = new FormData();
+    formData.append("file", file);
+
+    fetch("https://deploying-2-ub1h.onrender.com/upload", {
+        method: "POST",
+        body: formData
+    })
     .then(res => res.json())
     .then(data => {
 
-        if (data.status !== 'normal') {
-            document.getElementById("alertBox").innerHTML =
-                "🚨 ALERT: Intrusion Detected!";
-        } else {
-            document.getElementById("alertBox").innerHTML = "";
-        }
+        let labels = Object.keys(data.counts);
+        let values = Object.values(data.counts);
 
-        const row = `
-        <tr>
-            <td>${data.time}</td>
-            <td>${data.activity}</td>
-            <td style="color:${data.status !== 'normal' ? 'red' : 'lime'};font-weight:bold;">
-                ${data.status !== 'normal' ? '🚨 Intrusion' : '✅ Normal'}
-            </td>
-            <td>${data.confidence}</td>
-            <td style="color:${data.action === 'Quarantine' ? 'red' : 'white'}">
-                ${data.action}
-            </td>
-        </tr>`;
+        new Chart(document.getElementById('pieChart'), {
+            type: 'pie',
+            data: {
+                labels: labels,
+                datasets: [{
+                    data: values,
+                    backgroundColor: [
+                        '#00c3ff', '#ff4d4d', '#ffa500', '#28a745', '#a64dff'
+                    ]
+                }]
+            }
+        });
 
-        let table = document.getElementById("tableBody");
-        table.innerHTML = row + table.innerHTML;
+        new Chart(document.getElementById('barChart'), {
+            type: 'bar',
+            data: {
+                labels: labels,
+                datasets: [{
+                    label: "Attack Count",
+                    data: values,
+                    backgroundColor: '#00c3ff'
+                }]
+            }
+        });
 
-        if (table.rows.length > 15) {
-            table.deleteRow(15);
-        }
     });
+}
 
-}, 2000);
+function goLive() {
+    window.location.href = "live.html";
+}
 </script>
 
 </body>
