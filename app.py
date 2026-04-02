@@ -6,11 +6,12 @@ from datetime import datetime
 import pandas as pd
 from sklearn.preprocessing import LabelEncoder
 from collections import Counter
+import os
 
 app = Flask(__name__)
 CORS(app)
 
-# ---------- HEALTH CHECK (IMPORTANT) ----------
+# ---------- HEALTH CHECK ----------
 @app.route('/')
 def home():
     return "SentinelNet backend is running"
@@ -70,6 +71,7 @@ def upload():
         "counts": dict(counts)
     })
 
-# ---------- RUN ----------
+# ---------- RUN (IMPORTANT FIX) ----------
 if __name__ == "__main__":
-    app.run(host="0.0.0.0", port=10000)
+    port = int(os.environ.get("PORT", 10000))
+    app.run(host="0.0.0.0", port=port)
