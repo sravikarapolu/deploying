@@ -10,10 +10,16 @@ from collections import Counter
 app = Flask(__name__)
 CORS(app)
 
+# ---------- HEALTH CHECK (IMPORTANT) ----------
+@app.route('/')
+def home():
+    return "SentinelNet backend is running"
+
+# ---------- LOAD MODEL ----------
 def load_model():
     return pickle.load(open("model.pkl", "rb"))
 
-# ---------------- LIVE MONITOR ----------------
+# ---------- LIVE MONITOR ----------
 def fake_input():
     return [random.randint(0, 1) for _ in range(41)]
 
@@ -31,23 +37,24 @@ def live():
         "action": "Quarantine" if pred != "normal" else "None"
     })
 
-
-# ---------------- UPLOAD + ANALYSIS ----------------
+# ---------- UPLOAD ----------
 @app.route('/upload', methods=['POST'])
 def upload():
+    if 'file' not in request.files:
+        return jsonify({"error": "No file uploaded"}), 400
+
     file = request.files['file']
     df = pd.read_csv(file, header=None)
-    print("DATA SHAPE:", df.shape)
 
     X = df.iloc[:, :-2]
 
     # Encode categorical columns
     for col in X.select_dtypes(include=['object']).columns:
         X[col] = LabelEncoder().fit_transform(X[col])
+
     model = load_model()
     preds = model.predict(X)
 
-    # Simulate attack types (for visual dashboard)
     attack_types = []
     for p in preds:
         if p == 'normal':
@@ -63,6 +70,6 @@ def upload():
         "counts": dict(counts)
     })
 
-
+# ---------- RUN ----------
 if __name__ == "__main__":
     app.run(host="0.0.0.0", port=10000)
